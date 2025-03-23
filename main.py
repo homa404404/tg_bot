@@ -1,39 +1,53 @@
 import telebot
 import os
 import logging
-from bot_logic import flip_coin  # Импортируем функции из bot_logic
+from bot_logic import gen_pass, gen_emodji, flip_coin  # Импортируем функции из bot_logic
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Замените 'YOUR_BOT_TOKEN' на токен вашего бота
-BOT_TOKEN = os.getenv('BOT_TOKEN', '7808019428:AAF0jVT1acRQ62yB_G-vk8YLIn5tyqJeSJg')
+BOT_TOKEN = os.getenv('BOT_TOKEN', '7680128280:AAErh1tDaAxxG175WCPS-5Ji2RQagBVtTT0')
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     try:
-        bot.reply_to(message, "Приветик! Я твой Telegram бот. Напиши команду /wb_artikuls, /tgk_Lika, /coin, /tex_podderhka.")
+        bot.reply_to(message, "Привет! Я твой Telegram бот. Напиши команду /hello, /bye, /pass, /emodji или /coin также можешь скинуть фото разрабу этого бота дл яэтого просто скинь любое фото")
     except Exception as e:
         logger.error(f"Ошибка в send_welcome: {e}")
 
-@bot.message_handler(commands=['tgk_Lika'])
-def send_tgk(tgk):
+@bot.message_handler(commands=['hello'])
+def send_hello(message):
     try:
-        bot.reply_to(tgk, "https://t.me/linix_380.")
+        bot.reply_to(message, "Привет! Как дела?")
     except Exception as e:
-        logger.error(f"Ошибка в send_tgk: {e}")
+        logger.error(f"Ошибка в send_hello: {e}")
 
-@bot.message_handler(commands=['wb_artikuls'])
-def send_tgk(wb):
+@bot.message_handler(commands=['bye'])
+def send_bye(message):
     try:
-        bot.reply_to(wb, "https://t.me/65263048-арома расчёска , 162213264-тюлень Виталий , 287938313- наборчик с мармеладом харибо , 263793310-уходовые средства Егора Крида , 241180751-ой...")
+        bot.reply_to(message, "Пока! Удачи!")
     except Exception as e:
-        logger.error(f"Ошибка в send_wb: {e}")
+        logger.error(f"Ошибка в send_bye: {e}")
 
+@bot.message_handler(commands=['pass'])
+def send_password(message):
+    try:
+        password = gen_pass(10)  # Устанавливаем длину пароля, например, 10 символов
+        bot.reply_to(message, f"Вот твой сгенерированный пароль: {password}")
+    except Exception as e:
+        logger.error(f"Ошибка в send_password: {e}")
 
+@bot.message_handler(commands=['emodji'])
+def send_emodji(message):
+    try:
+        emodji = gen_emodji()
+        bot.reply_to(message, f"Вот эмоджи: {emodji}")
+    except Exception as e:
+        logger.error(f"Ошибка в send_emodji: {e}")
 
 @bot.message_handler(commands=['coin'])
 def send_coin(message):
@@ -43,16 +57,20 @@ def send_coin(message):
     except Exception as e:
         logger.error(f"Ошибка в send_coin: {e}")
 
-
-@bot.message_handler(commands=['tex_podderhka'])
-def send_tgk(tex):
+@bot.message_handler(content_types=['photo'])
+def handle_photo(message):
     try:
-        bot.reply_to(tex, "я-разработчик этого бота. В тех поддержку или для просьбы дополнений в боте писать мне в личные сообщения, или владельцу канала в тг")
+        file_info = bot.get_file(message.photo[-1].file_id)
+        file_name = f"{message.from_user.id}_{file_info.file_id}.jpg"
+        with open(file_name, 'wb') as new_file:
+            new_file.write(bot.download_file(file_info.file_path))
+        bot.reply_to(message, f"Фото сохранено как {file_name}")
     except Exception as e:
-        logger.error(f"Ошибка в tex: {e}")
+        logger.error(f"Ошибка в handle_photo: {e}")
 
-
-# Запуск бота
-if __name__ == '__main__':
-    logger.info("Бот запущен")
-    bot.polling(none_stop=True)
+if __name__ == "__main__":
+    try:
+        logger.info("Бот запущен")
+        bot.polling(none_stop=True)
+    except Exception as e:
+        logger.error(f"Ошибка при запуске бота: {e}")
